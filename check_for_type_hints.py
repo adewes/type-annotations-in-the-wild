@@ -7,6 +7,12 @@ import shutil
 import subprocess
 from multiprocessing import Process, Pool
 
+usage = """
+Usage: %s [language] [output JSON filename]
+
+By default, the script appends to the output file.
+""" % sys.argv[0]
+
 type_comment_re = re.compile(rb'#\s*type\s*:', re.I)
 typing_re = re.compile(rb'(import\s+typing)|(from\s+typing\s+import)', re.I)
 
@@ -91,8 +97,14 @@ def load_repos(filename):
     return repos
 
 def main(args):
-    filename = args[1]
-    repos = load_repos(filename)
+
+   if len(argv) < 3:
+        print usage
+        exit(-1)
+
+    input_filename = args[1]
+    output_filename = args[2]
+    repos = load_repos(input_filename)
     print(len(repos))
     p = Pool(20)
     try:
@@ -100,10 +112,11 @@ def main(args):
     except KeyboardInterrupt:
         return
     for repo, files in result:
-        print(json.dumps({
-                'repo' : repo,
-                'files' : files
-            }))
+        with open(output_filename, 'wb') as output_file:
+            output_file.write(json.dumps({
+                    'repo' : repo,
+                    'files' : files
+                }))
 
 if __name__ == '__main__':
     main(sys.argv)
